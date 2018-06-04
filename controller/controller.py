@@ -56,8 +56,17 @@ while True:
     key_header = struct.unpack(">I", key_field[:4])[0]
     load = struct.unpack(">IIII", load_field)
     
-    counter = counter + 1
     print "\tHot Item:", key_header, load
+
+    rq_op_field = struct.pack("B", NC_UPDATE_REQUEST)
+    rq_key_field = ""
+    rq_key_field += struct.pack(">I", key_header)
+    for i in range(12):
+        rq_key_field += struct.pack("B", 0)
+    rq_packet = rq_op_field + rq_key_field
+    s.sendto(rq_packet, (SERVER_IP, NC_PORT))
+    print "sent request"
+
     
     #f.write(str(key_header) + ' ')
     #f.write(str(load) + ' ')
