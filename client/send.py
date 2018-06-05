@@ -29,7 +29,7 @@ interval = 1.0 / (query_rate + 1)
 for line in f.readlines():
     line = line.split()
     op = line[0]
-    key_header = int(line[1])
+    key_header = 2
     key_body = line[2:]
 
     op_field = struct.pack("B", NC_READ_REQUEST)

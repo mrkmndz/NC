@@ -2,6 +2,18 @@ import socket
 import struct
 import time
 import thread
+import sys
+import time
+
+sys.path.append('/home/cs344/NetCache/bmv2/tools')
+from bm_runtime.simple_pre import SimplePre
+from bm_runtime.standard import Standard
+import bmpy_utils as utils
+
+client, mc_client = utils.thrift_connect(
+    "localhost", 22222, 
+    [("standard", Standard.Client), ("simple_pre", SimplePre.Client)]
+)
 
 from nc_config import *
 
@@ -67,7 +79,18 @@ while True:
     s.sendto(rq_packet, (SERVER_IP, NC_PORT))
     print "sent request"
 
-    
+    if time.time() - last_reset > 15:
+        print "RESETTING"
+        for x in range(1, 5):
+            register_name = "hh_load_%d_reg" % x
+            print "resetting "  + register_name
+            client.bm_register_reset(0, register_name)
+        for x in range(1, 4):
+            register_name = "hh_bf_%d_reg" % x
+            print "resetting "  + register_name
+            client.bm_register_reset(0, register_name)
+        last_reset = time.time()
+
     #f.write(str(key_header) + ' ')
     #f.write(str(load) + ' ')
     #f.write("\n")
