@@ -8,3 +8,4 @@ server/kv.txt
 generator/query.txt
 generator/hot.txt
 generator/kv.txt
+mininet/netcache.json
