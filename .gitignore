@@ -1,0 +1,10 @@
+*.pyc
+*.pcap
+bmv2/
+p4c-bmv2/
+client/query.txt
+controller/hot.txt
+server/kv.txt
+generator/query.txt
+generator/hot.txt
+generator/kv.txt
