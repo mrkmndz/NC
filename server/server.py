@@ -42,6 +42,12 @@ for i in range(2, 3002, 3):
     kv[key_header] = (key_field, val_field)
 f.close()
 
+def lookup_val(key):
+    key_header = struct.unpack(">I", nc_p.key[:4])[0]
+    op_field = struct.pack("B", op)
+    key_field, val_field = kv[key_header]
+    return val_field
+
 counter = 0
 def counting():
     last_counter = 0
@@ -54,23 +60,15 @@ thread.start_new_thread(counting, ())
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((SERVER_IP, NC_PORT))
 while True:
-    packet, addr = s.recvfrom(2048)
-    op_field = packet[0]
-    key_field = packet[1:]
+    packet_str, src = s.recvfrom(2048)
+    nc_p = NetCache(packet_str)
     
-    op = struct.unpack("B", op_field)[0]
-    key_header = struct.unpack(">I", key_field[:4])[0]
-    
-    if (op == NC_READ_REQUEST or op == NC_HOT_READ_REQUEST):
-        op = NC_READ_REPLY
-        op_field = struct.pack("B", op)
-        key_field, val_field = kv[key_header]
-        packet = op_field + key_field + val_field
-        s.sendto(packet, (CLIENT_IP, NC_PORT))
+    if (nc_p.type == NC_READ_REQUEST or op == NC_HOT_READ_REQUEST):
+        rp_p = NetCache(type=NC_READ_REPLY, key=nc_p.key) / \
+                DataValue(value=lookup_val(nc_p.key))
+        s.sendto(str(rq_p), (CLIENT_IP, NC_PORT))
         counter = counter + 1
     elif (op == NC_UPDATE_REQUEST):
-        op = NC_UPDATE_REPLY
-        op_field = struct.pack("B", op)
-        key_field, val_field = kv[key_header]
-        packet = op_field + key_field + val_field
-        s.sendto(packet, (CONTROLLER_IP, NC_PORT))
+        rp_p = NetCache(type=NC_UPDATE_REPLY, key=nc_p.key) / \
+                DataValue(value=lookup_val(nc_p.key))
+        s.sendto(str(rq_p), (CONTROLLER_IP, NC_PORT))
