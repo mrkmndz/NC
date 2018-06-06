@@ -51,14 +51,18 @@ outstanding = {}
 for i in range(1, max_key + 1):
     outstanding[i] = deque([])
 
+use_zipf = False
 def sender():
     global sent_counter
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     query_rate = 1000
     interval = 1.0 / (query_rate + 1)
     while True:
-        r = random.randint(1, num_query)
-        key_header = field[r]
+        if use_zipf:
+            r = random.randint(1, num_query)
+            key_header = field[r]
+        else:
+            key_header = random.randint(1, max_key)
         key_field = struct.pack(">I", key_header)
         for x in range(len_key - 4):
             key_field += "\0"
