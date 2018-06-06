@@ -5,7 +5,7 @@ import thread
 import sys
 import time
 
-sys.path.append('/home/cs344/NetCache/bmv2/tools')
+sys.path.append('/home/ubuntu/NetCache/bmv2/tools')
 from bm_runtime.simple_pre import SimplePre
 from bm_runtime.standard import Standard
 import bmpy_utils as utils
@@ -29,6 +29,7 @@ len_val = 128
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CONTROLLER_IP, NC_PORT))
+s.settimeout(1)
 
 ## Initiate the switch
 op = NC_UPDATE_REQUEST
@@ -53,31 +54,33 @@ for line in f.readlines():
     time.sleep(0.001)
 f.close()
 
-## Listen hot report
-#f = open(path_log, "w")
+last_reset = time.time()
 while True:
-    packet, addr = s.recvfrom(2048)
-    op_field = packet[0]
-    key_field = packet[1:len_key + 1]
-    load_field = packet[len_key + 1:]
-    
-    op = struct.unpack("B", op_field)[0]
-    if (op != NC_HOT_READ_REQUEST):
-        continue
-    
-    key_header = struct.unpack(">I", key_field[:4])[0]
-    load = struct.unpack(">IIII", load_field)
-    
-    print "\tHot Item:", key_header, load
+    try:
+        packet, addr = s.recvfrom(2048)
+        op_field = packet[0]
+        key_field = packet[1:len_key + 1]
+        load_field = packet[len_key + 1:]
+        
+        op = struct.unpack("B", op_field)[0]
+        if (op != NC_HOT_READ_REQUEST):
+            continue
+        
+        key_header = struct.unpack(">I", key_field[:4])[0]
+        load = struct.unpack(">IIII", load_field)
+        
+        print "\tHot Item:", key_header, load
 
-    rq_op_field = struct.pack("B", NC_UPDATE_REQUEST)
-    rq_key_field = ""
-    rq_key_field += struct.pack(">I", key_header)
-    for i in range(12):
-        rq_key_field += struct.pack("B", 0)
-    rq_packet = rq_op_field + rq_key_field
-    s.sendto(rq_packet, (SERVER_IP, NC_PORT))
-    print "sent request"
+        rq_op_field = struct.pack("B", NC_UPDATE_REQUEST)
+        rq_key_field = ""
+        rq_key_field += struct.pack(">I", key_header)
+        for i in range(12):
+            rq_key_field += struct.pack("B", 0)
+        rq_packet = rq_op_field + rq_key_field
+        s.sendto(rq_packet, (SERVER_IP, NC_PORT))
+        print "sent request"
+    except socket.timeout:
+        print "t/o"
 
     if time.time() - last_reset > 15:
         print "RESETTING"
@@ -90,9 +93,3 @@ while True:
             print "resetting "  + register_name
             client.bm_register_reset(0, register_name)
         last_reset = time.time()
-
-    #f.write(str(key_header) + ' ')
-    #f.write(str(load) + ' ')
-    #f.write("\n")
-    #f.flush()
-#f.close()
