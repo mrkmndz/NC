@@ -15,7 +15,7 @@ class NetCache(Packet):
     name = 'NetCache'
     fields_desc = [
         ByteEnumField('type', None, nc_types),
-        StrFixedLenField('key', None, length=16),
+        StrFixedLenField('key', None, length=KEY_SIZE),
     ]
 
 class HotItemLoad(Packet):
@@ -30,7 +30,7 @@ class HotItemLoad(Packet):
 class DataValue(Packet):
     name = "NetCache Value"
     fields_desc = [
-        StrFixedLenField('value', None, length=128)
+        StrFixedLenField('value', None, length=VALUE_SIZE)
     ]
 
 bind_layers(NetCache, HotItemLoad, type=NC_HOT_READ_REQUEST)

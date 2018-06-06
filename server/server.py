@@ -6,6 +6,7 @@ import sys
 
 sys.path.append('../include')
 from constants import *
+from headers import *
 
 path_kv = "kv.txt"
 path_log = "server_log.txt"
@@ -43,8 +44,7 @@ for i in range(2, 3002, 3):
 f.close()
 
 def lookup_val(key):
-    key_header = struct.unpack(">I", nc_p.key[:4])[0]
-    op_field = struct.pack("B", op)
+    key_header = struct.unpack(">I", key[:4])[0]
     key_field, val_field = kv[key_header]
     return val_field
 
@@ -63,12 +63,12 @@ while True:
     packet_str, src = s.recvfrom(2048)
     nc_p = NetCache(packet_str)
     
-    if (nc_p.type == NC_READ_REQUEST or op == NC_HOT_READ_REQUEST):
+    if (nc_p.type == NC_READ_REQUEST or nc_p.type == NC_HOT_READ_REQUEST):
         rp_p = NetCache(type=NC_READ_REPLY, key=nc_p.key) / \
                 DataValue(value=lookup_val(nc_p.key))
-        s.sendto(str(rq_p), (CLIENT_IP, NC_PORT))
+        s.sendto(str(rp_p), (CLIENT_IP, NC_PORT))
         counter = counter + 1
-    elif (op == NC_UPDATE_REQUEST):
+    elif (nc_p.type == NC_UPDATE_REQUEST):
         rp_p = NetCache(type=NC_UPDATE_REPLY, key=nc_p.key) / \
                 DataValue(value=lookup_val(nc_p.key))
-        s.sendto(str(rq_p), (CONTROLLER_IP, NC_PORT))
+        s.sendto(str(rp_p), (CONTROLLER_IP, NC_PORT))
