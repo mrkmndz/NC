@@ -6,7 +6,15 @@ import sys
 import time
 
 sys.path.append('/home/ubuntu/NetCache/bmv2/tools')
+from bm_runtime.simple_pre import SimplePre
+from bm_runtime.standard import Standard
+import bmpy_utils as utils
 from runtime_CLI import RuntimeAPI, load_json_config
+
+client, mc_client = utils.thrift_connect(
+    "localhost", 22222, 
+    [("standard", Standard.Client), ("simple_pre", SimplePre.Client)]
+)
 
 load_json_config(client, None)
 api = RuntimeAPI(SimplePre, client, mc_client)
@@ -52,7 +60,7 @@ CACHE_SIZE = 10
 CACHE_EXIST_TABLE = "check_cache_exist"
 CACHE_EXIST_ACTION = "check_cache_exist_act"
 
-def reset_hh_regs(client):
+def reset_hh_regs(api):
     print "RESETTING HH REGS"
     for x in range(1, 5):
         register_name = "hh_load_%d_reg" % x
@@ -63,7 +71,7 @@ def reset_hh_regs(client):
         print "resetting "  + register_name
         api.do_register_reset(register_name)
 
-def reset_cache_allocation(client):
+def reset_cache_allocation(api):
     print "RESETTING CACHE ALLOCATION TABLE"
     api.do_table_clear(CACHE_EXIST_TABLE)
 
@@ -76,8 +84,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CONTROLLER_IP, NC_PORT))
 s.settimeout(1)
 
-reset_hh_regs(client)
-reset_cache_allocation(client)
+reset_hh_regs(api)
+reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
 last_reset = time.time()
 while True:
@@ -106,5 +114,5 @@ while True:
         print "t/o"
 
     if time.time() - last_reset > 5:
-        reset_hh_regs(client)
+        reset_hh_regs(api)
         last_reset = time.time()
