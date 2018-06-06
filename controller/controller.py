@@ -7,32 +7,27 @@ import time
 from cStringIO import StringIO
 import re
 
-sys.path.append('/home/ubuntu/NetCache/bmv2/tools')
-from bm_runtime.simple_pre import SimplePre
-from bm_runtime.standard import Standard
-import bmpy_utils as utils
-from runtime_CLI import RuntimeAPI, load_json_config
+from constants import *
 
-client, mc_client = utils.thrift_connect(
-    "localhost", 22222, 
-    [("standard", Standard.Client), ("simple_pre", SimplePre.Client)]
-)
-
-load_json_config(client, None)
-api = RuntimeAPI(SimplePre, client, mc_client)
-
-from nc_config import *
-
-NC_PORT = 8888
-CLIENT_IP = "10.0.0.1"
-SERVER_IP = "10.0.0.2"
-CONTROLLER_IP = "10.0.0.3"
-
-CACHE_SIZE = 50
 EVICTION_SIZE = 5
 CACHE_EXIST_TABLE = "check_cache_exist"
 CACHE_EXIST_ACTION = "check_cache_exist_act"
 CACHE_VALID_REGISTER = "cache_valid_reg"
+
+def configure_runtime_api():
+    sys.path.append('../bmv2/tools')
+    from bm_runtime.simple_pre import SimplePre
+    from bm_runtime.standard import Standard
+    import bmpy_utils as utils
+    from runtime_CLI import RuntimeAPI, load_json_config
+
+    client, mc_client = utils.thrift_connect(
+        "localhost", 22222, 
+        [("standard", Standard.Client), ("simple_pre", SimplePre.Client)]
+    )
+
+    load_json_config(client, None)
+    return RuntimeAPI(SimplePre, client, mc_client)
 
 def reset_hh_regs(api):
     print "RESETTING HH REGS"
@@ -71,6 +66,7 @@ def remove_table_entry(api, handle):
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CONTROLLER_IP, NC_PORT))
 
+api = configure_runtime_api()
 reset_hh_regs(api)
 reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]

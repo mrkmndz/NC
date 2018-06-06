@@ -3,16 +3,10 @@ import struct
 import time
 import thread
 
-from nc_config import *
+from constants import *
 
-NC_PORT = 8888
-CLIENT_IP = "10.0.0.1"
-SERVER_IP = "10.0.0.2"
-CONTROLLER_IP = "10.0.0.3"
 path_query = "query.txt"
 query_rate = 1000
-
-len_key = 16
 
 counter = 0
 def counting():

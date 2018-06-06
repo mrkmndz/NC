@@ -3,12 +3,8 @@ import struct
 import time
 import thread
 
-from nc_config import *
+from constants import *
 
-NC_PORT = 8888
-CLIENT_IP = "10.0.0.1"
-SERVER_IP = "10.0.0.2"
-CONTROLLER_IP = "10.0.0.3"
 path_kv = "kv.txt"
 path_log = "server_log.txt"
 
