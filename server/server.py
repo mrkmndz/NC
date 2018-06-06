@@ -9,9 +9,6 @@ from constants import *
 from headers import *
 from db import kv
 
-path_kv = "kv.txt"
-path_log = "server_log.txt"
-
 def lookup_val(key):
     key_header = struct.unpack(">I", key[:4])[0]
     return kv[key_header]

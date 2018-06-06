@@ -34,7 +34,7 @@ class DataValue(Packet):
     ]
 
 bind_layers(NetCache, HotItemLoad, type=NC_HOT_READ_REQUEST)
-bind_layers(NetCache, HotItemLoad, type=NC_READ_REPLY)
-bind_layers(NetCache, HotItemLoad, type=NC_UPDATE_REPLY)
+bind_layers(NetCache, DataValue, type=NC_READ_REPLY)
+bind_layers(NetCache, DataValue, type=NC_UPDATE_REPLY)
 
 
