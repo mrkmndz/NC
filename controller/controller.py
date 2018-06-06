@@ -7,8 +7,11 @@ import time
 from cStringIO import StringIO
 import re
 
+sys.path.append('../include')
 from constants import *
+from headers import *
 
+CACHE_SIZE = 50
 EVICTION_SIZE = 5
 CACHE_EXIST_TABLE = "check_cache_exist"
 CACHE_EXIST_ACTION = "check_cache_exist_act"

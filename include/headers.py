@@ -1,4 +1,5 @@
 from scapy.all import *
+from constants import *
 
 nc_types = {
     NC_READ_REQUEST     : "read request",

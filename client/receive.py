@@ -2,7 +2,9 @@ import socket
 import struct
 import time
 import thread
+import sys
 
+sys.path.append('../include')
 from constants import *
 
 counter = 0
