@@ -6,6 +6,7 @@ import sys
 from collections import deque
 import random
 import math
+import threading
 
 sys.path.append('../include')
 from constants import *
@@ -36,12 +37,22 @@ for i in range(1, num_query + 1):
 sent_counter = 0
 recv_counter = 0
 def counting():
+    last_sc = 0
+    last_rc = 0
     while True:
-        print sent_counter , recv_counter
+        print (sent_counter - last_sc) , (recv_counter - last_rc)
+        last_sc = sent_counter
+        last_rc = recv_counter
         time.sleep(1)
 thread.start_new_thread(counting, ())
 
+o_lock = threading.Lock()
+outstanding = {}
+for i in range(1, max_key + 1):
+    outstanding[i] = deque([])
+
 def sender():
+    global sent_counter
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     query_rate = 1000
     interval = 1.0 / (query_rate + 1)
@@ -50,7 +61,7 @@ def sender():
         key_header = field[r]
         key_field = struct.pack(">I", key_header)
         for x in range(len_key - 4):
-            key_field.append("\0")
+            key_field += "\0"
         rq_p = NetCache(type=NC_READ_REQUEST, key=key_field)
         o_lock.acquire()
         outstanding[key_header].append(time.time())
@@ -58,7 +69,9 @@ def sender():
         s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
         sent_counter = sent_counter + 1
         time.sleep(interval)
+thread.start_new_thread(sender, ())
 
+max_latency = 0
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CLIENT_IP, NC_PORT))
 while True:
@@ -89,4 +102,5 @@ while True:
     this_latency = time.time() - oldest
     if this_latency > max_latency:
         print "max latency is %f" % this_latency
+        max_latency = this_latency
     recv_counter = recv_counter + 1
