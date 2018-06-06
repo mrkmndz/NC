@@ -4,6 +4,8 @@ import time
 import thread
 import sys
 import time
+from cStringIO import StringIO
+import re
 
 sys.path.append('/home/ubuntu/NetCache/bmv2/tools')
 from bm_runtime.simple_pre import SimplePre
@@ -57,6 +59,7 @@ SERVER_IP = "10.0.0.2"
 CONTROLLER_IP = "10.0.0.3"
 
 CACHE_SIZE = 50
+EVICTION_SIZE = 5
 CACHE_EXIST_TABLE = "check_cache_exist"
 CACHE_EXIST_ACTION = "check_cache_exist_act"
 CACHE_VALID_REGISTER = "cache_valid_reg"
@@ -77,46 +80,57 @@ def reset_cache_allocation(api):
     api.do_table_clear(CACHE_EXIST_TABLE)
     api.do_register_reset(CACHE_VALID_REGISTER)
 
-def add_table_entry_simple(api, key, value):
+def add_table_entry(api, key, value):
+    old_stdout = sys.stdout
+    sys.stdout = mystdout = StringIO()
     api.do_table_add("%s %s %s => %d" % (CACHE_EXIST_TABLE, CACHE_EXIST_ACTION, key, value))
+    sys.stdout = old_stdout
+    output = mystdout.getvalue()
+    print output
+    handle_search = re.search('Entry has been added with handle (.*)', output)
+    return int(handle_search.group(1))
+
+def invalidate_cache(api, index):
+    api.do_register_write("%s %d 0" % (CACHE_VALID_REGISTER, index))
+
+def remove_table_entry(api, handle):
+    api.do_table_delete("%s %d" % (CACHE_EXIST_TABLE, handle))
 
 
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CONTROLLER_IP, NC_PORT))
-s.settimeout(1)
 
 reset_hh_regs(api)
 reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
-last_reset = time.time()
 while True:
+    packet_str, src = s.recvfrom(2048)
+
+    nc_p = NetCache(packet_str)
+
+    if (nc_p.type != NC_HOT_READ_REQUEST):
+        continue
+
+    #nc_p.show()
+
     try:
-        packet_str, src = s.recvfrom(2048)
-
-        nc_p = NetCache(packet_str)
-
-        if (nc_p.type != NC_HOT_READ_REQUEST):
-            continue
-
-        #nc_p.show()
-
-        try:
-            open_slot = next(idx for idx, val in enumerate(cache) if val is None)
-            print "found slot at %d" % open_slot
-            encoded_key = '0x' + ''.join(x.encode('hex') for x in nc_p.key)
-            cache[open_slot] = encoded_key
-            print encoded_key
-            add_table_entry_simple(api, encoded_key, open_slot)
-            rq_p = NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key)
-            s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
-            print "sent request"
-        except StopIteration:
-            print "cache is full"
-
-    except socket.timeout:
-        print "t/o"
-
-    if time.time() - last_reset > 10000:
+        open_slot = next(idx for idx, val in enumerate(cache) if val is None)
+        print "found slot at %d" % open_slot
+        encoded_key = '0x' + ''.join(x.encode('hex') for x in nc_p.key)
+        print "for key %s" % encoded_key
+        handle = add_table_entry(api, encoded_key, open_slot)
+        cache[open_slot] = (encoded_key, handle)
+        rq_p = NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key)
+        s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
+    except StopIteration:
+        print "cache is full"
+        choices = random.choices(range(CACHE_SIZE), k=EVICTION_SIZE)
+        print "evicting %s" % ", ".join(choices)
+        for choice in choices:
+            key, handle = cache[choice]
+            print "uncaching %s" % key
+            invalidate_cache(api, choice)
+            remove_table_entry(api, handle)
+            cache[choice] = None
         reset_hh_regs(api)
-        last_reset = time.time()
