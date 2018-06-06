@@ -6,16 +6,7 @@ import sys
 import time
 
 sys.path.append('/home/ubuntu/NetCache/bmv2/tools')
-from bm_runtime.simple_pre import SimplePre
-from bm_runtime.standard import Standard
-from bm_runtime.standard.ttypes import *
 from runtime_CLI import RuntimeAPI, load_json_config
-import bmpy_utils as utils
-
-client, mc_client = utils.thrift_connect(
-    "localhost", 22222, 
-    [("standard", Standard.Client), ("simple_pre", SimplePre.Client)]
-)
 
 load_json_config(client, None)
 api = RuntimeAPI(SimplePre, client, mc_client)
@@ -75,16 +66,6 @@ def reset_hh_regs(client):
 def reset_cache_allocation(client):
     print "RESETTING CACHE ALLOCATION TABLE"
     api.do_table_clear(CACHE_EXIST_TABLE)
-
-def add_table_entry(client, key, key_bw, value, value_bw):
-    encoded_key = bytes_to_string(parse_param(key, key_bw))
-    param = BmMatchParam(type = BmMatchParamType.EXACT,
-                         exact = BmMatchParamExact(encoded_key))
-    data = [bytes_to_string(parse_param(value, value_bw))]
-    self.client.bm_mt_add_entry(
-        0, CACHE_EXIST_TABLE, [param], CACHE_EXIST_ACTION, data,
-        BmAddEntryOptions(priority = 0)
-    )
 
 def add_table_entry_simple(api, key, value):
     api.do_table_add("%s %s %s => %d" % (CACHE_EXIST_TABLE, CACHE_EXIST_ACTION, key, value))
