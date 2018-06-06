@@ -53,7 +53,6 @@ thread.start_new_thread(counting, ())
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((SERVER_IP, NC_PORT))
-#f = open(path_log, "w")
 while True:
     packet, addr = s.recvfrom(2048)
     op_field = packet[0]
@@ -75,9 +74,3 @@ while True:
         key_field, val_field = kv[key_header]
         packet = op_field + key_field + val_field
         s.sendto(packet, (CONTROLLER_IP, NC_PORT))
-    
-    #f.write(str(op) + ' ')
-    #f.write(str(key_header) + '\n')
-    #f.flush()
-    #print counter
-#f.close()
