@@ -125,8 +125,9 @@ while True:
         s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
     except StopIteration:
         print "cache is full"
-        choices = random.choices(range(CACHE_SIZE), k=EVICTION_SIZE)
-        print "evicting %s" % ", ".join(choices)
+        choices = random.sample(range(CACHE_SIZE), EVICTION_SIZE)
+        cstrs = map(lambda x : "%d" % x, choices)
+        print "evicting %s" % (", ".join(cstrs))
         for choice in choices:
             key, handle = cache[choice]
             print "uncaching %s" % key
