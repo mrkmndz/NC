@@ -74,7 +74,6 @@ while True:
     elif (op == NC_UPDATE_REQUEST):
         op = NC_UPDATE_REPLY
         op_field = struct.pack("B", op)
-        print "got request for key %s" % key_header
         key_field, val_field = kv[key_header]
         packet = op_field + key_field + val_field
         s.sendto(packet, (CONTROLLER_IP, NC_PORT))

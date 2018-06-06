@@ -56,9 +56,10 @@ CLIENT_IP = "10.0.0.1"
 SERVER_IP = "10.0.0.2"
 CONTROLLER_IP = "10.0.0.3"
 
-CACHE_SIZE = 10
+CACHE_SIZE = 50
 CACHE_EXIST_TABLE = "check_cache_exist"
 CACHE_EXIST_ACTION = "check_cache_exist_act"
+CACHE_VALID_REGISTER = "cache_valid_reg"
 
 def reset_hh_regs(api):
     print "RESETTING HH REGS"
@@ -74,6 +75,7 @@ def reset_hh_regs(api):
 def reset_cache_allocation(api):
     print "RESETTING CACHE ALLOCATION TABLE"
     api.do_table_clear(CACHE_EXIST_TABLE)
+    api.do_register_reset(CACHE_VALID_REGISTER)
 
 def add_table_entry_simple(api, key, value):
     api.do_table_add("%s %s %s => %d" % (CACHE_EXIST_TABLE, CACHE_EXIST_ACTION, key, value))
@@ -97,22 +99,24 @@ while True:
         if (nc_p.type != NC_HOT_READ_REQUEST):
             continue
 
-        nc_p.show()
+        #nc_p.show()
 
         try:
             open_slot = next(idx for idx, val in enumerate(cache) if val is None)
+            print "found slot at %d" % open_slot
             encoded_key = '0x' + ''.join(x.encode('hex') for x in nc_p.key)
+            cache[open_slot] = encoded_key
             print encoded_key
             add_table_entry_simple(api, encoded_key, open_slot)
+            rq_p = NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key)
+            s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
+            print "sent request"
         except StopIteration:
             print "cache is full"
 
-        rq_p = NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key)
-        s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
-        print "sent request"
     except socket.timeout:
         print "t/o"
 
-    if time.time() - last_reset > 5:
+    if time.time() - last_reset > 10000:
         reset_hh_regs(api)
         last_reset = time.time()
