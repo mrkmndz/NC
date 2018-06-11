@@ -1,13 +1,11 @@
 #define HEADER_VALUE(i) \
-    header_type nc_value_##i##_t { \
-        fields { \
-            value_##i##_1: 32; \
-            value_##i##_2: 32; \
-            value_##i##_3: 32; \
-            value_##i##_4: 32; \
-        } \
+    header nc_value_##i##_t { \
+            bit<32> value_##i##_1; \
+            bit<32> value_##i##_2; \
+            bit<32> value_##i##_3; \
+            bit<32> value_##i##_4; \
     } \
-    header nc_value_##i##_t nc_value_##i;
+    nc_value_##i##_t nc_value_##i;
 
 #define PARSER_VALUE(i, ip1) \
     parser parse_nc_value_##i { \
@@ -16,10 +14,7 @@
     }
 
 #define REGISTER_VALUE_SLICE(i, j) \
-    register value_##i##_##j##_reg { \
-        width: 32; \
-        instance_count: NUM_CACHE; \
-    }
+    Register<bit<32>>(NUM_CACHE) value_##i##_##j##_reg;
 
 #define REGISTER_VALUE(i) \
     REGISTER_VALUE_SLICE(i, 1) \
@@ -29,7 +24,7 @@
 
 #define ACTION_READ_VALUE_SLICE(i, j) \
     action read_value_##i##_##j##_act() { \
-        register_read(nc_value_##i.value_##i##_##j, value_##i##_##j##_reg, nc_cache_md.cache_index); \
+        value_##i##_##j##_reg.read(nc_value_##i.value_##i##_##j,  nc_cache_md.cache_index); \
     }
 
 #define ACTION_READ_VALUE(i) \
@@ -40,9 +35,10 @@
 
 #define TABLE_READ_VALUE_SLICE(i, j) \
     table read_value_##i##_##j { \
-        actions { \
+        actions = { \
             read_value_##i##_##j##_act; \
         } \
+        default_action = read_value_##i##_##j##_act; \
     }
 
 #define TABLE_READ_VALUE(i) \
@@ -53,21 +49,22 @@
 
 #define ACTION_ADD_VALUE_HEADER(i) \
     action add_value_header_##i##_act() { \
-        add_to_field(ipv4.totalLen, 16);\
-        add_to_field(udp.len, 16);\
-        add_header(nc_value_##i); \
+        ipv4.totalLen = ipv4.totalLen + 16;\
+        udp.totalLen = udp.totalLen + 16;\
+        nc_value_##i.setValid(True); \
     }
 
 #define TABLE_ADD_VALUE_HEADER(i) \
     table add_value_header_##i { \
-        actions { \
+        actions = { \
             add_value_header_##i##_act; \
         } \
+        default_action = add_value_header_##i##_act; \
     }
 
 #define ACTION_WRITE_VALUE_SLICE(i, j) \
     action write_value_##i##_##j##_act() { \
-        register_write(value_##i##_##j##_reg, nc_cache_md.cache_index, nc_value_##i.value_##i##_##j); \
+      value_##i##_##j##_reg.write(nc_cache_md.cache_index, nc_value_##i.value_##i##_##j); \
     }
 
 #define ACTION_WRITE_VALUE(i) \
@@ -78,9 +75,10 @@
 
 #define TABLE_WRITE_VALUE_SLICE(i, j) \
     table write_value_##i##_##j { \
-        actions { \
+        actions = { \
             write_value_##i##_##j##_act; \
         } \
+        default_action = write_value_##i##_##j##_act; \
     }
 
 #define TABLE_WRITE_VALUE(i) \
@@ -91,33 +89,34 @@
 
 #define ACTION_REMOVE_VALUE_HEADER(i) \
     action remove_value_header_##i##_act() { \
-        subtract_from_field(ipv4.totalLen, 16);\
-        subtract_from_field(udp.len, 16);\
-        remove_header(nc_value_##i); \
+        ipv4.totalLen = ipv4.totalLen - 16;\
+        udp.totalLen = udp.totalLen - 16;\
+        nc_value_##i.setValid(false); \
     }
 
 #define TABLE_REMOVE_VALUE_HEADER(i) \
     table remove_value_header_##i { \
-        actions { \
+        actions = { \
             remove_value_header_##i##_act; \
         } \
+        default_action = remove_value_header_##i##_act; \
     }
 
 #define CONTROL_PROCESS_VALUE(i) \
     control process_value_##i { \
         if (nc_hdr.op == NC_READ_REQUEST and nc_cache_md.cache_valid == 1) { \
-            apply (add_value_header_##i); \
-            apply (read_value_##i##_1); \
-            apply (read_value_##i##_2); \
-            apply (read_value_##i##_3); \
-            apply (read_value_##i##_4); \
+            add_value_header_##i.apply(); \
+            read_value_##i##_1.apply(); \
+            read_value_##i##_2.apply(); \
+            read_value_##i##_3.apply(); \
+            read_value_##i##_4.apply(); \
         } \
         else if (nc_hdr.op == NC_UPDATE_REPLY and nc_cache_md.cache_exist == 1) { \
-            apply (write_value_##i##_1); \
-            apply (write_value_##i##_2); \
-            apply (write_value_##i##_3); \
-            apply (write_value_##i##_4); \
-            apply (remove_value_header_##i); \
+            write_value_##i##_1.apply(); \
+            write_value_##i##_2.apply(); \
+            write_value_##i##_3.apply(); \
+            write_value_##i##_4.apply(); \
+            remove_value_header_##i.apply(); \
         } \
     }
 
