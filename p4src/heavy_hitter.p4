@@ -5,185 +5,52 @@
 #define HH_BF_NUM           512
 #define HH_BF_HASH_WIDTH    9
 
-header_type nc_load_md_t {
-    bit<16> index_1;
-    bit<16> index_2;
-    bit<16> index_3;
-    bit<16> index_4;
+struct nc_load_md_t {
+    bit<16> index;
         
-    bit<32> load_1;
-    bit<32> load_2;
-    bit<32> load_3;
-    bit<32> load_4;
+    bit<HH_LOAD_WIDTH> load;
 }
-metadata nc_load_md_t nc_load_md;
+nc_load_md_t nc_load_md;
 
-field_list hh_hash_fields {
-    nc_hdr.key;
-}
+Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_reg
 
-Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_1_reg 
-
-field_list_calculation hh_load_1_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : crc32;
-    output_width : HH_LOAD_HASH_WIDTH;
+action hh_load_count_act() {
+    nc_load_md.index = hash(HashAlgorithm.crc32, 0, {nc_hdr.key}, HH_LOAD_NUM)
+    hh_load_reg.read(nc_load_md.load, nc_load_md.index);
+    hh_load_reg.write(nc_load_md.index, nc_load_md.load + 1);
 }
-action hh_load_1_count_act() {
-    modify_field_with_hash_based_offset(nc_load_md.index_1, 0, hh_load_1_hash, HH_LOAD_NUM);
-    register_read(nc_load_md.load_1, hh_load_1_reg, nc_load_md.index_1);
-    register_write(hh_load_1_reg, nc_load_md.index_1, nc_load_md.load_1 + 1);
-}
-table hh_load_1_count {
+table hh_load_count {
     actions = {
-        hh_load_1_count_act;
-    }
-}
-
-Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_2_reg 
-
-field_list_calculation hh_load_2_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : csum16;
-    output_width : HH_LOAD_HASH_WIDTH;
-}
-action hh_load_2_count_act() {
-    modify_field_with_hash_based_offset(nc_load_md.index_2, 0, hh_load_2_hash, HH_LOAD_NUM);
-    register_read(nc_load_md.load_2, hh_load_2_reg, nc_load_md.index_2);
-    register_write(hh_load_2_reg, nc_load_md.index_2, nc_load_md.load_2 + 1);
-}
-table hh_load_2_count {
-    actions = {
-        hh_load_2_count_act;
-    }
-}
-
-Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_3_reg 
-
-field_list_calculation hh_load_3_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : crc16;
-    output_width : HH_LOAD_HASH_WIDTH;
-}
-action hh_load_3_count_act() {
-    modify_field_with_hash_based_offset(nc_load_md.index_3, 0, hh_load_3_hash, HH_LOAD_NUM);
-    register_read(nc_load_md.load_3, hh_load_3_reg, nc_load_md.index_3);
-    register_write(hh_load_3_reg, nc_load_md.index_3, nc_load_md.load_3 + 1);
-}
-table hh_load_3_count {
-    actions = {
-        hh_load_3_count_act;
-    }
-}
-
-Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_4_reg 
-
-field_list_calculation hh_load_4_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : crc32;
-    output_width : HH_LOAD_HASH_WIDTH;
-}
-action hh_load_4_count_act() {
-    modify_field_with_hash_based_offset(nc_load_md.index_4, 0, hh_load_4_hash, HH_LOAD_NUM);
-    register_read(nc_load_md.load_4, hh_load_4_reg, nc_load_md.index_4);
-    register_write(hh_load_4_reg, nc_load_md.index_4, nc_load_md.load_4 + 1);
-}
-table hh_load_4_count {
-    actions = {
-        hh_load_4_count_act;
+        hh_load_count_act;
     }
 }
 
 control count_min {
-    hh_load_1_count.apply();
-    hh_load_2_count.apply();
-    hh_load_3_count.apply();
-    hh_load_4_count.apply();
+    hh_load_count.apply();
 }
 
-header_type hh_bf_md_t {
-    bit<16> index_1;
-    bit<16> index_2;
-    bit<16> index_3;
+struct hh_bf_md_t {
+    bit<16> index;
 
-    bit<1> bf_1;
-    bit<1> bf_2;
-    bit<1> bf_3;
+    bit<1> bf;
 }
-metadata hh_bf_md_t hh_bf_md;
+hh_bf_md_t hh_bf_md;
 
-Register<bit<1>>(HH_BF_NUM) hh_bf_1_reg 
+Register<bit<1>>(HH_BF_NUM) hh_bf_reg 
 
-field_list_calculation hh_bf_1_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : crc32;
-    output_width : HH_BF_HASH_WIDTH;
+action hh_bf_act() {
+    hh_bf_md.index = hash(HashAlgorithm.crc32, 0, {nc_hdr.key}, HH_BF_NUM);
+    hh_bf_reg.read(hh_bf_md.bf, hh_bf_md.index);
+    hh_bf_reg.write(hh_bf_md.index, 1);
 }
-action hh_bf_1_act() {
-    modify_field_with_hash_based_offset(hh_bf_md.index_1, 0, hh_bf_1_hash, HH_BF_NUM);
-    register_read(hh_bf_md.bf_1, hh_bf_1_reg, hh_bf_md.index_1);
-    register_write(hh_bf_1_reg, hh_bf_md.index_1, 1);
-}
-table hh_bf_1 {
+table hh_bf {
     actions = {
-        hh_bf_1_act;
-    }
-}
-
-Register<bit<1>>(HH_BF_NUM) hh_bf_2_reg 
-
-field_list_calculation hh_bf_2_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : csum16;
-    output_width : HH_BF_HASH_WIDTH;
-}
-action hh_bf_2_act() {
-    modify_field_with_hash_based_offset(hh_bf_md.index_2, 0, hh_bf_2_hash, HH_BF_NUM);
-    register_read(hh_bf_md.bf_2, hh_bf_2_reg, hh_bf_md.index_2);
-    register_write(hh_bf_2_reg, hh_bf_md.index_2, 1);
-}
-table hh_bf_2 {
-    actions = {
-        hh_bf_2_act;
-    }
-}
-
-Register<bit<1>>(HH_BF_NUM) hh_bf_3_reg 
-
-field_list_calculation hh_bf_3_hash {
-    input {
-        hh_hash_fields;
-    }
-    algorithm : crc16;
-    output_width : HH_BF_HASH_WIDTH;
-}
-action hh_bf_3_act() {
-    modify_field_with_hash_based_offset(hh_bf_md.index_3, 0, hh_bf_3_hash, HH_BF_NUM);
-    register_read(hh_bf_md.bf_3, hh_bf_3_reg, hh_bf_md.index_3);
-    register_write(hh_bf_3_reg, hh_bf_md.index_3, 1);
-}
-table hh_bf_3 {
-    actions = {
-        hh_bf_3_act;
+        hh_bf_act;
     }
 }
 
 control bloom_filter {
-    hh_bf_1.apply();
-    hh_bf_2.apply();
-    hh_bf_3.apply();
+    hh_bf.apply();
 }
 
 field_list mirror_list {
