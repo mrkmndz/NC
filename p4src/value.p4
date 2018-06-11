@@ -8,9 +8,9 @@
     nc_value_##i##_t nc_value_##i;
 
 #define PARSER_VALUE(i, ip1) \
-    parser parse_nc_value_##i { \
-        extract (nc_value_##i); \
-        return parse_nc_value_##ip1; \
+    state parse_nc_value_##i { \
+        b.extract(p.nc_value_##i); \
+        transition parse_nc_value_##ip1; \
     }
 
 #define REGISTER_VALUE_SLICE(i, j) \
@@ -135,8 +135,8 @@
     CONTROL_PROCESS_VALUE(i)
 
 #define FINAL_PARSER(i) \
-    parser parse_nc_value_##i { \
-        return ingress; \
+    state parse_nc_value_##i { \
+        transition accept; \
     }
 
 HANDLE_VALUE(1, 2)
