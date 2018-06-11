@@ -35,25 +35,6 @@ header tcp_t {
     bit<16> urgentPtr;
 }
 
-header udp_t {
-    bit<16> srcPort;
-    bit<16> dstPort;
-    bit<16> len;
-    bit<16> checksum;
-}
-
-header nc_hdr_t {
-    bit<8> op;
-    bit<128> key;
-}
-
-header nc_load_t {
-    bit<32> load_1;
-    bit<32> load_2;
-    bit<32> load_3;
-    bit<32> load_4;
-}
-
 struct Parsed_packet {
     ethernet_t ethernet;
     ipv4_t ipv4;

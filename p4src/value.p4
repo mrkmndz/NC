@@ -1,18 +1,3 @@
-#define HEADER_VALUE(i) \
-    header nc_value_##i##_t { \
-            bit<32> value_##i##_1; \
-            bit<32> value_##i##_2; \
-            bit<32> value_##i##_3; \
-            bit<32> value_##i##_4; \
-    } \
-    nc_value_##i##_t nc_value_##i;
-
-#define PARSER_VALUE(i, ip1) \
-    state parse_nc_value_##i { \
-        b.extract(p.nc_value_##i); \
-        transition parse_nc_value_##ip1; \
-    }
-
 #define REGISTER_VALUE_SLICE(i, j) \
     Register<bit<32>>(NUM_CACHE) value_##i##_##j##_reg;
 
@@ -120,9 +105,7 @@
         } \
     }
 
-#define HANDLE_VALUE(i, ip1) \
-    HEADER_VALUE(i) \
-    PARSER_VALUE(i, ip1) \
+#define HANDLE_VALUE(i) \
     REGISTER_VALUE(i) \
     ACTION_READ_VALUE(i) \
     TABLE_READ_VALUE(i) \
@@ -134,20 +117,14 @@
     TABLE_REMOVE_VALUE_HEADER(i) \
     CONTROL_PROCESS_VALUE(i)
 
-#define FINAL_PARSER(i) \
-    state parse_nc_value_##i { \
-        transition accept; \
-    }
-
-HANDLE_VALUE(1, 2)
-HANDLE_VALUE(2, 3)
-HANDLE_VALUE(3, 4)
-HANDLE_VALUE(4, 5)
-HANDLE_VALUE(5, 6)
-HANDLE_VALUE(6, 7)
-HANDLE_VALUE(7, 8)
-HANDLE_VALUE(8, 9)
-FINAL_PARSER(9)
+HANDLE_VALUE(1)
+HANDLE_VALUE(2)
+HANDLE_VALUE(3)
+HANDLE_VALUE(4)
+HANDLE_VALUE(5)
+HANDLE_VALUE(6)
+HANDLE_VALUE(7)
+HANDLE_VALUE(8)
 
 struct reply_read_hit_info_md_t {
     bit<32> ipv4_srcAddr;
