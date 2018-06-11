@@ -149,12 +149,12 @@ HANDLE_VALUE(7, 8)
 HANDLE_VALUE(8, 9)
 FINAL_PARSER(9)
 
-header_type reply_read_hit_info_md_t {
+struct reply_read_hit_info_md_t {
     bit<32> ipv4_srcAddr;
     bit<32> ipv4_dstAddr;
 }
 
-metadata reply_read_hit_info_md_t reply_read_hit_info_md;
+reply_read_hit_info_md_t reply_read_hit_info_md;
 
 action reply_read_hit_before_act() {
     reply_read_hit_info_md.ipv4_srcAddr = ipv4.srcAddr;
@@ -165,6 +165,7 @@ table reply_read_hit_before {
     actions = {
         reply_read_hit_before_act;
     }
+    default_action = reply_read_hit_before_act;
 }
 
 action reply_read_hit_after_act() {
@@ -177,6 +178,7 @@ table reply_read_hit_after {
     actions = {
         reply_read_hit_after_act;
     }
+    default_action = reply_read_hit_after_act;
 }
 
 control process_value {    
