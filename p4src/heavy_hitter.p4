@@ -22,10 +22,8 @@ field_list hh_hash_fields {
     nc_hdr.key;
 }
 
-register hh_load_1_reg {
-    width: HH_LOAD_WIDTH;
-    instance_count: HH_LOAD_NUM;
-}
+Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_1_reg 
+
 field_list_calculation hh_load_1_hash {
     input {
         hh_hash_fields;
@@ -44,10 +42,8 @@ table hh_load_1_count {
     }
 }
 
-register hh_load_2_reg {
-    width: HH_LOAD_WIDTH;
-    instance_count: HH_LOAD_NUM;
-}
+Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_2_reg 
+
 field_list_calculation hh_load_2_hash {
     input {
         hh_hash_fields;
@@ -66,10 +62,8 @@ table hh_load_2_count {
     }
 }
 
-register hh_load_3_reg {
-    width: HH_LOAD_WIDTH;
-    instance_count: HH_LOAD_NUM;
-}
+Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_3_reg 
+
 field_list_calculation hh_load_3_hash {
     input {
         hh_hash_fields;
@@ -88,10 +82,8 @@ table hh_load_3_count {
     }
 }
 
-register hh_load_4_reg {
-    width: HH_LOAD_WIDTH;
-    instance_count: HH_LOAD_NUM;
-}
+Register<bit<HH_LOAD_WIDTH>>(HH_LOAD_NUM) hh_load_4_reg 
+
 field_list_calculation hh_load_4_hash {
     input {
         hh_hash_fields;
@@ -128,10 +120,8 @@ header_type hh_bf_md_t {
 }
 metadata hh_bf_md_t hh_bf_md;
 
-register hh_bf_1_reg {
-    width: 1;
-    instance_count: HH_BF_NUM;
-}
+Register<bit<1>>(HH_BF_NUM) hh_bf_1_reg 
+
 field_list_calculation hh_bf_1_hash {
     input {
         hh_hash_fields;
@@ -150,10 +140,8 @@ table hh_bf_1 {
     }
 }
 
-register hh_bf_2_reg {
-    width: 1;
-    instance_count: HH_BF_NUM;
-}
+Register<bit<1>>(HH_BF_NUM) hh_bf_2_reg 
+
 field_list_calculation hh_bf_2_hash {
     input {
         hh_hash_fields;
@@ -172,10 +160,8 @@ table hh_bf_2 {
     }
 }
 
-register hh_bf_3_reg {
-    width: 1;
-    instance_count: HH_BF_NUM;
-}
+Register<bit<1>>(HH_BF_NUM) hh_bf_3_reg 
+
 field_list_calculation hh_bf_3_hash {
     input {
         hh_hash_fields;

@@ -25,10 +25,7 @@ table check_cache_exist {
 }
 
 
-register cache_valid_reg {
-    width: 1;
-    instance_count: NUM_CACHE;
-}
+Register<bit<1>>(NUM_CACHE) cache_valid_reg;
 
 action check_cache_valid_act() {
     cache_valid_reg.read(nc_cache_md.cache_valid, nc_cache_md.cache_index);
@@ -37,17 +34,17 @@ table check_cache_valid {
     actions = {
         check_cache_valid_act;
     }
-    //default_action: check_cache_valid_act;
+    default_action = check_cache_valid_act;
 }
 
 action set_cache_valid_act() {
-    cache_valid_reg.write(nc_cache_md.cache_index, 1); //Devon TODO check the order of these args
+    cache_valid_reg.write(nc_cache_md.cache_index, 1);
 }
 table set_cache_valid {
     actions = {
         set_cache_valid_act;
     }
-    //default_action: set_cache_valid_act;
+    default_action = set_cache_valid_act;
 }
 
 control process_cache {
