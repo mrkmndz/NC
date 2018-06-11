@@ -3,7 +3,7 @@ action set_egress(egress_spec) {
     ipv4.ttl = ipv4.ttl - 1;
 }
 
-@pragma stage 11
+@stage(11)
 table ipv4_route {
     key = {
         ipv4.dstAddr : exact;

@@ -53,16 +53,9 @@ control bloom_filter {
     hh_bf.apply();
 }
 
-field_list mirror_list {
-    nc_load_md.load_1;
-    nc_load_md.load_2;
-    nc_load_md.load_3;
-    nc_load_md.load_4;
-}
-
-#define CONTROLLER_MIRROR_DSET 3
+#define CONTROLLER_MIRROR_DSET 32w3
 action clone_to_controller_act() {
-    clone_egress_pkt_to_egress(CONTROLLER_MIRROR_DSET, mirror_list);
+    clone3<nc_load_md_t>(CloneType.clone_e2e, CONTROLLER_MIRROR_DSET, nc_load_md)
 }
 
 table clone_to_controller {
@@ -79,7 +72,7 @@ control report_hot_step_1 {
 action report_hot_act() {
     nc_hdr.op = NC_HOT_READ_REQUEST;
     
-    add_header (nc_load); //TODO Devon I don't know what this does in modern p4
+    nc_load.setValid(true);
     ipv4.totalLen = 16;
     udp.len = 16;
     nc_load.load_1 = nc_load_md.load_1;
@@ -97,22 +90,16 @@ table report_hot {
 }
 
 control report_hot_step_2 {
-    apply (report_hot);
+    report_hot.apply();
 }   
 
 control heavy_hitter {
     if (standard_metadata.instance_type == 0) {
         count_min();
-        if (nc_load_md.load_1 > HH_THRESHOLD) {
-            if (nc_load_md.load_2 > HH_THRESHOLD) {
-                if (nc_load_md.load_3 > HH_THRESHOLD) {
-                    if (nc_load_md.load_4 > HH_THRESHOLD) {
-                        bloom_filter();
-                        if (hh_bf_md.bf_1 == 0 or hh_bf_md.bf_2 == 0 or hh_bf_md.bf_3 == 0){
-                            report_hot_step_1();
-                        }
-                    }
-                }
+        if (nc_load_md.load > HH_THRESHOLD) {
+            bloom_filter();
+            if (hh_bf_md.bf == 0){
+                report_hot_step_1();
             }
         }
     }
