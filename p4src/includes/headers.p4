@@ -1,79 +1,72 @@
-header_type ethernet_t {
-    fields {
-        dstAddr : 48;
-        srcAddr : 48;
-        etherType : 16;
-    }
+header ethernet_t {
+    bit<48> dstAddr;
+    bit<48> srcAddr;
+    bit<16> etherType;
 }
-header ethernet_t ethernet;
 
-header_type ipv4_t {
-    fields {
-        version : 4;
-        ihl : 4;
-        diffserv : 8;
-        totalLen : 16;
-        identification : 16;
-        flags : 3;
-        fragOffset : 13;
-        ttl : 8;
-        protocol : 8;
-        hdrChecksum : 16;
-        srcAddr : 32;
-        dstAddr: 32;
-    }
-}
-header ipv4_t ipv4;
 
-header_type tcp_t {
-    fields {
-        srcPort : 16;
-        dstPort : 16;
-        seqNo : 32;
-        ackNo : 32;
-        dataOffset : 4;
-        res : 3;
-        ecn : 3;
-        ctrl : 6;
-        window : 16;
-        checksum : 16;
-        urgentPtr : 16;
-    }   
+header ipv4_t {
+    bit<4> version;
+    bit<4> ihl;
+    bit<8> diffserv;
+    bit<16> totalLen;
+    bit<16> identification;
+    bit<3> flags;
+    bit<13> fragOffset;
+    bit<8> ttl;
+    bit<8> protocol;
+    bit<16> hdrChecksum;
+    bit<32> srcAddr;
+    bit<32> dstAddr;
 }
-header tcp_t tcp;
 
-header_type udp_t {
-    fields {
-        srcPort : 16;
-        dstPort : 16;
-        len : 16;
-        checksum : 16;
-    }
-}
-header udp_t udp;
 
-header_type nc_hdr_t {
-    fields {
-        op: 8;
-        key: 128;
-    }
+header tcp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<32> seqNo;
+    bit<32> ackNo;
+    bit<4> dataOffset;
+    bit<3> res;
+    bit<3> ecn;
+    bit<6> ctrl;
+    bit<16> window;
+    bit<16> checksum;
+    bit<16> urgentPtr;
 }
-header nc_hdr_t nc_hdr;
 
-header_type nc_load_t {
-    fields {
-        load_1: 32;
-        load_2: 32;
-        load_3: 32;
-        load_4: 32;
-    }
+header udp_t {
+    bit<16> srcPort;
+    bit<16> dstPort;
+    bit<16> len;
+    bit<16> checksum;
 }
-header nc_load_t nc_load;
+
+header nc_hdr_t {
+    bit<8> op;
+    bit<128> key;
+}
+
+header nc_load_t {
+    bit<32> load_1;
+    bit<32> load_2;
+    bit<32> load_3;
+    bit<32> load_4;
+}
+
+struct Parsed_packet {
+    ethernet_t ethernet;
+    ipv4_t ipv4;
+    tcp_t tcp;
+    udp_t udp;
+    nc_hdr_t nc_hdr;
+    nc_load_t nc_load;
+}
 
 /*
     The headers for value are defined in value.p4
     k = 1, 2, ..., 8
-    header_type nc_value_{k}_t {
+    header nc_value_{k}_t {
         fields {
             value_{k}_1: 32;
             value_{k}_2: 32;

@@ -151,40 +151,38 @@ HANDLE_VALUE(8, 9)
 FINAL_PARSER(9)
 
 header_type reply_read_hit_info_md_t {
-    fields {
-        ipv4_srcAddr: 32;
-        ipv4_dstAddr: 32;
-    }
+    bit<32> ipv4_srcAddr;
+    bit<32> ipv4_dstAddr;
 }
 
 metadata reply_read_hit_info_md_t reply_read_hit_info_md;
 
 action reply_read_hit_before_act() {
-    modify_field (reply_read_hit_info_md.ipv4_srcAddr, ipv4.srcAddr);
-    modify_field (reply_read_hit_info_md.ipv4_dstAddr, ipv4.dstAddr);
+    reply_read_hit_info_md.ipv4_srcAddr = ipv4.srcAddr;
+    reply_read_hit_info_md.ipv4_dstAddr = ipv4.dstAddr;
 }
 
 table reply_read_hit_before {
-    actions {
+    actions = {
         reply_read_hit_before_act;
     }
 }
 
 action reply_read_hit_after_act() {
-    modify_field (ipv4.srcAddr, reply_read_hit_info_md.ipv4_dstAddr);
-    modify_field (ipv4.dstAddr, reply_read_hit_info_md.ipv4_srcAddr);
-    modify_field (nc_hdr.op, NC_READ_REPLY);
+    ipv4.srcAddr = reply_read_hit_info_md.ipv4_dstAddr;
+    ipv4.dstAddr = reply_read_hit_info_md.ipv4_srcAddr;
+    nc_hdr.op = NC_READ_REPLY;
 }
 
 table reply_read_hit_after {
-    actions {
+    actions = {
         reply_read_hit_after_act;
     }
 }
 
 control process_value {    
     if (nc_hdr.op == NC_READ_REQUEST and nc_cache_md.cache_valid == 1) {
-        apply (reply_read_hit_before);
+        reply_read_hit_before.apply();
     }
     process_value_1();
     process_value_2();
@@ -195,6 +193,6 @@ control process_value {
     process_value_7();
     process_value_8();
     if (nc_hdr.op == NC_READ_REQUEST and nc_cache_md.cache_valid == 1) {
-        apply (reply_read_hit_after);
+        reply_read_hit_after.apply();
     }
 }

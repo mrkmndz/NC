@@ -1,14 +1,14 @@
 action set_egress(egress_spec) {
-    modify_field(standard_metadata.egress_spec, egress_spec);
-    add_to_field(ipv4.ttl, -1);
+   standard_metadata.egress_spec = egress_spec;
+    ipv4.ttl = ipv4.ttl - 1;
 }
 
 @pragma stage 11
 table ipv4_route {
-    reads {
+    key = {
         ipv4.dstAddr : exact;
     }
-    actions {
+    actions = {
         set_egress;
     }
     size : 8192;

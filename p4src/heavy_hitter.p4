@@ -6,17 +6,15 @@
 #define HH_BF_HASH_WIDTH    9
 
 header_type nc_load_md_t {
-    fields {
-        index_1: 16;
-        index_2: 16;
-        index_3: 16;
-        index_4: 16;
+    bit<16> index_1;
+    bit<16> index_2;
+    bit<16> index_3;
+    bit<16> index_4;
         
-        load_1: 32;
-        load_2: 32;
-        load_3: 32;
-        load_4: 32;
-    }
+    bit<32> load_1;
+    bit<32> load_2;
+    bit<32> load_3;
+    bit<32> load_4;
 }
 metadata nc_load_md_t nc_load_md;
 
@@ -41,7 +39,7 @@ action hh_load_1_count_act() {
     register_write(hh_load_1_reg, nc_load_md.index_1, nc_load_md.load_1 + 1);
 }
 table hh_load_1_count {
-    actions {
+    actions = {
         hh_load_1_count_act;
     }
 }
@@ -63,7 +61,7 @@ action hh_load_2_count_act() {
     register_write(hh_load_2_reg, nc_load_md.index_2, nc_load_md.load_2 + 1);
 }
 table hh_load_2_count {
-    actions {
+    actions = {
         hh_load_2_count_act;
     }
 }
@@ -85,7 +83,7 @@ action hh_load_3_count_act() {
     register_write(hh_load_3_reg, nc_load_md.index_3, nc_load_md.load_3 + 1);
 }
 table hh_load_3_count {
-    actions {
+    actions = {
         hh_load_3_count_act;
     }
 }
@@ -107,28 +105,26 @@ action hh_load_4_count_act() {
     register_write(hh_load_4_reg, nc_load_md.index_4, nc_load_md.load_4 + 1);
 }
 table hh_load_4_count {
-    actions {
+    actions = {
         hh_load_4_count_act;
     }
 }
 
 control count_min {
-    apply (hh_load_1_count);
-    apply (hh_load_2_count);
-    apply (hh_load_3_count);
-    apply (hh_load_4_count);
+    hh_load_1_count.apply();
+    hh_load_2_count.apply();
+    hh_load_3_count.apply();
+    hh_load_4_count.apply();
 }
 
 header_type hh_bf_md_t {
-    fields {
-        index_1: 16;
-        index_2: 16;
-        index_3: 16;
-    
-        bf_1: 1;
-        bf_2: 1;
-        bf_3: 1;
-    }
+    bit<16> index_1;
+    bit<16> index_2;
+    bit<16> index_3;
+
+    bit<1> bf_1;
+    bit<1> bf_2;
+    bit<1> bf_3;
 }
 metadata hh_bf_md_t hh_bf_md;
 
@@ -149,7 +145,7 @@ action hh_bf_1_act() {
     register_write(hh_bf_1_reg, hh_bf_md.index_1, 1);
 }
 table hh_bf_1 {
-    actions {
+    actions = {
         hh_bf_1_act;
     }
 }
@@ -171,7 +167,7 @@ action hh_bf_2_act() {
     register_write(hh_bf_2_reg, hh_bf_md.index_2, 1);
 }
 table hh_bf_2 {
-    actions {
+    actions = {
         hh_bf_2_act;
     }
 }
@@ -193,15 +189,15 @@ action hh_bf_3_act() {
     register_write(hh_bf_3_reg, hh_bf_md.index_3, 1);
 }
 table hh_bf_3 {
-    actions {
+    actions = {
         hh_bf_3_act;
     }
 }
 
 control bloom_filter {
-    apply (hh_bf_1);
-    apply (hh_bf_2);
-    apply (hh_bf_3);
+    hh_bf_1.apply();
+    hh_bf_2.apply();
+    hh_bf_3.apply();
 }
 
 field_list mirror_list {
@@ -217,28 +213,28 @@ action clone_to_controller_act() {
 }
 
 table clone_to_controller {
-    actions {
+    actions = {
         clone_to_controller_act;
     }
 }
 
 control report_hot_step_1 {
-    apply (clone_to_controller);
+    clone_to_controller.apply();
 }
 
 #define CONTROLLER_IP 0x0a000003
 action report_hot_act() {
-    modify_field (nc_hdr.op, NC_HOT_READ_REQUEST);
+    nc_hdr.op = NC_HOT_READ_REQUEST;
     
-    add_header (nc_load);
-    add_to_field(ipv4.totalLen, 16);
-    add_to_field(udp.len, 16);
-    modify_field (nc_load.load_1, nc_load_md.load_1);
-    modify_field (nc_load.load_2, nc_load_md.load_2);
-    modify_field (nc_load.load_3, nc_load_md.load_3);
-    modify_field (nc_load.load_4, nc_load_md.load_4);
+    add_header (nc_load); //TODO Devon I don't know what this does in modern p4
+    ipv4.totalLen = 16;
+    udp.len = 16;
+    nc_load.load_1 = nc_load_md.load_1;
+    nc_load.load_2 = nc_load_md.load_2;
+    nc_load.load_3 = nc_load_md.load_3;
+    nc_load.load_4 = nc_load_md.load_4;
     
-    modify_field (ipv4.dstAddr, CONTROLLER_IP);
+    ipv4.dstAddr = CONTROLLER_IP;
 }
 
 table report_hot {
