@@ -11,7 +11,8 @@ from scapy.all import *
 
 sys.path.append('../include')
 from constants import *
-from headers import NetCache as NC
+from headers import *
+import threading
 
 
 CACHE_SIZE = 50
@@ -61,16 +62,25 @@ def invalidate_cache(api, index):
 def remove_table_entry(api, handle):
     api.do_table_delete("%s %d" % (CACHE_EXIST_TABLE, handle))
 
+lock = threading.Lock()
 
-
+s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 api = configure_runtime_api()
 reset_hh_regs(api)
 reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
 
-def recv(pkt):
-    nc_p = pkt.getlayer(NC)
+def send(pkt):
+    sendp(pad_pkt(pkt, 64), iface="eth0")
 
+def recv(pkt):
+    if not pkt.haslayer(P4NetCache):
+        return
+    nc_p = pkt[P4NetCache]
+    if nc_p.type != NC_READ_REQUEST:
+        return
+
+    lock.acquire()
     try:
         open_slot = next(idx for idx, val in enumerate(cache) if val is None)
         print "found slot at %d" % open_slot
@@ -78,7 +88,7 @@ def recv(pkt):
         print "for key %s" % encoded_key
         handle = add_table_entry(api, encoded_key, open_slot)
         cache[open_slot] = (encoded_key, handle)
-        rq_p = NC(type=NC_UPDATE_REQUEST, key=nc_p.key, value="aaa")
+        rq_p = P4NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key, value="aaa")
         s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
     except StopIteration:
         print "cache is full"
@@ -92,5 +102,6 @@ def recv(pkt):
             remove_table_entry(api, handle)
             cache[choice] = None
         reset_hh_regs(api)
+    lock.release()
 
 sniff(iface="eth0", prn=recv, count=0)

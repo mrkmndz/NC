@@ -11,7 +11,7 @@ nc_types = {
     NC_UPDATE_REPLY     : "update reply"
 }
 
-class NetCache(Packet):
+class P4NetCache(Packet):
     name = 'NetCache'
     fields_desc = [
         ByteEnumField('type', None, nc_types),
@@ -19,5 +19,5 @@ class NetCache(Packet):
         StrFixedLenField('value', None, length=VALUE_SIZE)
     ]
 
-bind_layers(UDP, NetCache, dport=NC_PORT)
+bind_layers(UDP, P4NetCache, dport=NC_PORT)
 
