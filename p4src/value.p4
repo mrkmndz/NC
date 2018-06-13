@@ -137,6 +137,7 @@ action reply_read_hit_after_act() {
     modify_field (ipv4.srcAddr, reply_read_hit_info_md.ipv4_dstAddr);
     modify_field (ipv4.dstAddr, reply_read_hit_info_md.ipv4_srcAddr);
     modify_field (nc_hdr.op, NC_READ_REPLY);
+    modify_field (udp.checksum, 0);
 }
 
 table reply_read_hit_after {
