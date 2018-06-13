@@ -29,7 +29,6 @@ s.bind((SERVER_IP, NC_PORT))
 while True:
     packet_str, src = s.recvfrom(2048)
     src_ip, src_port = src
-    print src_ip
     nc_p = P4NetCache(packet_str)
     
     if (nc_p.type == NC_READ_REQUEST or nc_p.type == NC_HOT_READ_REQUEST):
