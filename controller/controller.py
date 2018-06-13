@@ -34,14 +34,8 @@ def configure_runtime_api():
 
 def reset_hh_regs(api):
     print "RESETTING HH REGS"
-    for x in range(1, 5):
-        register_name = "hh_load_%d_reg" % x
-        print "resetting "  + register_name
-        api.do_register_reset(register_name)
-    for x in range(1, 4):
-        register_name = "hh_bf_%d_reg" % x
-        print "resetting "  + register_name
-        api.do_register_reset(register_name)
+    api.do_register_reset("hh_load_1_reg")
+    api.do_register_reset("hh_bf_1_reg")
 
 def reset_cache_allocation(api):
     print "RESETTING CACHE ALLOCATION TABLE"

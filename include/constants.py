@@ -13,4 +13,4 @@ SERVER_IP = "10.0.0.2"
 CONTROLLER_IP = "10.0.0.3"
 
 KEY_SIZE = 16 # bytes
-VALUE_SIZE = 128 # bytes
+VALUE_SIZE = 16 # bytes
