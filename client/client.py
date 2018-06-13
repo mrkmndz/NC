@@ -81,6 +81,9 @@ s.bind((CLIENT_IP, NC_PORT))
 while True:
     packet_str, src = s.recvfrom(1024)
     nc_p = P4NetCache(packet_str)
+    if nc_p.type != NC_READ_REPLY:
+        nc_p.show()
+        continue
     key_header = struct.unpack(">I", nc_p.key[:4])[0]
     if key_header < 1 or key_header > 1000:
         print "invalid key %d" % key_header
