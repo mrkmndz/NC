@@ -11,6 +11,8 @@ sys.path.append('../include')
 from constants import *
 from headers import *
 
+from scapy.all import *
+
 CACHE_SIZE = 50
 EVICTION_SIZE = 5
 CACHE_EXIST_TABLE = "check_cache_exist"
@@ -60,22 +62,13 @@ def remove_table_entry(api, handle):
 
 
 
-s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-s.bind((CONTROLLER_IP, NC_PORT))
-
 api = configure_runtime_api()
 reset_hh_regs(api)
 reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
-while True:
-    packet_str, src = s.recvfrom(2048)
 
-    nc_p = NetCache(packet_str)
-
-    if (nc_p.type != NC_HOT_READ_REQUEST):
-        continue
-
-    #nc_p.show()
+def recv(pkt):
+    nc_p = pkt.getlayer('NetCache')
 
     try:
         open_slot = next(idx for idx, val in enumerate(cache) if val is None)
@@ -98,3 +91,5 @@ while True:
             remove_table_entry(api, handle)
             cache[choice] = None
         reset_hh_regs(api)
+
+sniff(iface="eth0", prn=recv, count=0)
