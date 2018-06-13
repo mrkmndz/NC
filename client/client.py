@@ -34,76 +34,41 @@ for i in range(1, num_query + 1):
         k = k + 1
     field[i] = k
 
-sent_counter = 0
-recv_counter = 0
-def counting():
-    last_sc = 0
-    last_rc = 0
-    while True:
-        print (sent_counter - last_sc) , (recv_counter - last_rc)
-        last_sc = sent_counter
-        last_rc = recv_counter
-        time.sleep(1)
-thread.start_new_thread(counting, ())
-
-o_lock = threading.Lock()
-outstanding = {}
-for i in range(1, max_key + 1):
-    outstanding[i] = deque([])
-
-use_zipf = True 
-def sender():
-    global sent_counter
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    query_rate = 1000
-    interval = 1.0 / (query_rate + 1)
-    while True:
-        if use_zipf:
-            r = random.randint(1, num_query)
-            key_header = field[r]
-        else:
-            key_header = random.randint(1, max_key)
-        key_field = struct.pack(">I", key_header)
-        for x in range(len_key - 4):
-            key_field += "\0"
-        rq_p = P4NetCache(type=NC_READ_REQUEST, key=key_field)
-        o_lock.acquire()
-        outstanding[key_header].append(time.time())
-        o_lock.release()
-        s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
-        sent_counter = sent_counter + 1
-        time.sleep(interval)
-thread.start_new_thread(sender, ())
-
-max_latency = 0
+use_zipf = True
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CLIENT_IP, NC_PORT))
-while True:
+last_print = time.time()
+responses = 0
+while (True):
+    if use_zipf:
+        r = random.randint(1, num_query)
+        key_header = field[r]
+    else:
+        key_header = random.randint(1, max_key)
+    key_field = struct.pack(">I", key_header)
+    for x in range(len_key - 4):
+        key_field += "\0"
+    rq_p = P4NetCache(type=NC_READ_REQUEST, key=key_field)
+    s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
     packet_str, src = s.recvfrom(1024)
     nc_p = P4NetCache(packet_str)
     if nc_p.type != NC_READ_REPLY:
-        nc_p.show()
-        continue
+        print "unexpected response"
+        break
     key_header = struct.unpack(">I", nc_p.key[:4])[0]
     if key_header < 1 or key_header > 1000:
         print "invalid key %d" % key_header
-        nc_p.show()
         break
     if nc_p.value != kv[key_header]:
         print "data mismatch on key %d" % key_header
-        nc_p.show()
-        print "vs"
+        print "expected:"
         print kv[key_header]
         break
-    o_lock.acquire()
-    sent_times = outstanding[key_header]
-    if len(sent_times) == 0:
-        print "recv without send %d" % key_header
-        break
-    oldest = sent_times.popleft()
-    o_lock.release()
-    this_latency = time.time() - oldest
-    if this_latency > max_latency:
-        print "max latency is %f" % this_latency
-        max_latency = this_latency
-    recv_counter = recv_counter + 1
+    responses += 1
+    duration = time.time() - last_print
+    if duration > 1:
+        print "QPS = %f" % (responses / duration)
+        responses = 0
+        last_print = time.time()
+nc_p.show()
+
