@@ -16,25 +16,14 @@ class NetCache(Packet):
     fields_desc = [
         ByteEnumField('type', None, nc_types),
         StrFixedLenField('key', None, length=KEY_SIZE),
-    ]
-
-class HotItemLoad(Packet):
-    name = "Hot Item Load Values"
-    fields_desc = [
-        IntField('load_1', None),
-        IntField('load_2', None),
-        IntField('load_3', None),
-        IntField('load_4', None)
-    ]
-
-class DataValue(Packet):
-    name = "NetCache Value"
-    fields_desc = [
         StrFixedLenField('value', None, length=VALUE_SIZE)
     ]
 
-bind_layers(NetCache, HotItemLoad, type=NC_HOT_READ_REQUEST)
-bind_layers(NetCache, DataValue, type=NC_READ_REPLY)
-bind_layers(NetCache, DataValue, type=NC_UPDATE_REPLY)
+class ZeroChecksumUDP(UDP):
+    def post_build(self, p, pay):
+        self.chksum = 0
+        return super(ZeroChecksumUDP, self).post_build(p, pay)
 
+bind_layers(UDP, NetCache, dport=NC_PORT)
+bind_layers(ZeroChecksumUDP, NetCache, dport=NC_PORT)
 
