@@ -7,11 +7,12 @@ import time
 from cStringIO import StringIO
 import re
 
+from scapy.all import *
+
 sys.path.append('../include')
 from constants import *
-from headers import *
+from headers import NetCache as NC
 
-from scapy.all import *
 
 CACHE_SIZE = 50
 EVICTION_SIZE = 5
@@ -68,7 +69,7 @@ reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
 
 def recv(pkt):
-    nc_p = pkt.getlayer('NetCache')
+    nc_p = pkt.getlayer(NC)
 
     try:
         open_slot = next(idx for idx, val in enumerate(cache) if val is None)
@@ -77,7 +78,7 @@ def recv(pkt):
         print "for key %s" % encoded_key
         handle = add_table_entry(api, encoded_key, open_slot)
         cache[open_slot] = (encoded_key, handle)
-        rq_p = NetCache(type=NC_UPDATE_REQUEST, key=nc_p.key)
+        rq_p = NC(type=NC_UPDATE_REQUEST, key=nc_p.key, value="aaa")
         s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
     except StopIteration:
         print "cache is full"

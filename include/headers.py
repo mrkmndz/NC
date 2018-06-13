@@ -19,11 +19,5 @@ class NetCache(Packet):
         StrFixedLenField('value', None, length=VALUE_SIZE)
     ]
 
-class ZeroChecksumUDP(UDP):
-    def post_build(self, p, pay):
-        self.chksum = 0
-        return super(ZeroChecksumUDP, self).post_build(p, pay)
-
 bind_layers(UDP, NetCache, dport=NC_PORT)
-bind_layers(ZeroChecksumUDP, NetCache, dport=NC_PORT)
 
