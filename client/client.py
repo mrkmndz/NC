@@ -34,8 +34,33 @@ for i in range(1, num_query + 1):
         k = k + 1
     field[i] = k
 
+import argparse
+parser = argparse.ArgumentParser()
+parser.add_argument("base", help="base ip", type=int)
+parser.add_argument("num", help="number of threads", type=int)
+parser.add_argument('--nosharding', action='store_true', default=False, help='no sharding')
+parser.add_argument('--badsharding', action='store_true', default=False, help='bad sharding')
+args = parser.parse_args()
+
+SERVER_A = "10.0.0.1"
+SERVER_B = "10.0.0.2"
+no_sharding = args.nosharding
+bad_sharding = args.badsharding
+def get_shard(key):
+    if no_sharding:
+        return SERVER_A
+    if bad_sharding:
+        if (key / 100) % 2 == 0:
+            return SERVER_A
+        else:
+            return SERVER_B
+    if key % 2 == 0:
+        return SERVER_A
+    else:
+        return SERVER_B
+
 responses = 0
-def worker(ip="10.0.0.1"):
+def worker(ip=None):
     global responses 
     use_zipf = True
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -50,7 +75,7 @@ def worker(ip="10.0.0.1"):
         for x in range(len_key - 4):
             key_field += "\0"
         rq_p = P4NetCache(type=NC_READ_REQUEST, key=key_field)
-        s.sendto(str(rq_p), (SERVER_IP, NC_PORT))
+        s.sendto(str(rq_p), (get_shard(key_header), NC_PORT))
         packet_str, src = s.recvfrom(1024)
         nc_p = P4NetCache(packet_str)
         if nc_p.type != NC_READ_REPLY:
@@ -69,8 +94,8 @@ def worker(ip="10.0.0.1"):
     nc_p.show()
 
 from threading import Thread
-for x in range(3):
-    ip = "10.0.0.%d" % (x + 5)
+for x in range(args.num):
+    ip = "10.0.0.%d" % (x + args.base)
     print ip
     t = Thread(target=worker, kwargs={"ip": ip})
     t.setDaemon(True)
