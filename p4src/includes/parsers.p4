@@ -37,19 +37,7 @@ parser parse_udp {
 
 parser parse_nc_hdr {
     extract (nc_hdr);
-    return select(latest.op) {
-        NC_READ_REQUEST: ingress;
-        NC_READ_REPLY: parse_value;
-        NC_HOT_READ_REQUEST: parse_nc_load;
-        NC_UPDATE_REQUEST: ingress;
-        NC_UPDATE_REPLY: parse_value;
-        default: ingress;
-    }
-}
-
-parser parse_nc_load {
-    extract (nc_load);
-    return ingress;
+    return parse_value;
 }
 
 parser parse_value {

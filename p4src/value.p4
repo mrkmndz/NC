@@ -51,20 +51,6 @@
     TABLE_READ_VALUE_SLICE(i, 3) \
     TABLE_READ_VALUE_SLICE(i, 4)
 
-#define ACTION_ADD_VALUE_HEADER(i) \
-    action add_value_header_##i##_act() { \
-        add_to_field(ipv4.totalLen, 16);\
-        add_to_field(udp.len, 16);\
-        add_header(nc_value_##i); \
-    }
-
-#define TABLE_ADD_VALUE_HEADER(i) \
-    table add_value_header_##i { \
-        actions { \
-            add_value_header_##i##_act; \
-        } \
-    }
-
 #define ACTION_WRITE_VALUE_SLICE(i, j) \
     action write_value_##i##_##j##_act() { \
         register_write(value_##i##_##j##_reg, nc_cache_md.cache_index, nc_value_##i.value_##i##_##j); \
@@ -89,24 +75,9 @@
     TABLE_WRITE_VALUE_SLICE(i, 3) \
     TABLE_WRITE_VALUE_SLICE(i, 4)
 
-#define ACTION_REMOVE_VALUE_HEADER(i) \
-    action remove_value_header_##i##_act() { \
-        subtract_from_field(ipv4.totalLen, 16);\
-        subtract_from_field(udp.len, 16);\
-        remove_header(nc_value_##i); \
-    }
-
-#define TABLE_REMOVE_VALUE_HEADER(i) \
-    table remove_value_header_##i { \
-        actions { \
-            remove_value_header_##i##_act; \
-        } \
-    }
-
 #define CONTROL_PROCESS_VALUE(i) \
     control process_value_##i { \
         if (nc_hdr.op == NC_READ_REQUEST and nc_cache_md.cache_valid == 1) { \
-            apply (add_value_header_##i); \
             apply (read_value_##i##_1); \
             apply (read_value_##i##_2); \
             apply (read_value_##i##_3); \
@@ -117,7 +88,6 @@
             apply (write_value_##i##_2); \
             apply (write_value_##i##_3); \
             apply (write_value_##i##_4); \
-            apply (remove_value_header_##i); \
         } \
     }
 
@@ -141,14 +111,7 @@
     }
 
 HANDLE_VALUE(1, 2)
-HANDLE_VALUE(2, 3)
-HANDLE_VALUE(3, 4)
-HANDLE_VALUE(4, 5)
-HANDLE_VALUE(5, 6)
-HANDLE_VALUE(6, 7)
-HANDLE_VALUE(7, 8)
-HANDLE_VALUE(8, 9)
-FINAL_PARSER(9)
+FINAL_PARSER(2)
 
 header_type reply_read_hit_info_md_t {
     fields {
@@ -187,13 +150,6 @@ control process_value {
         apply (reply_read_hit_before);
     }
     process_value_1();
-    process_value_2();
-    process_value_3();
-    process_value_4();
-    process_value_5();
-    process_value_6();
-    process_value_7();
-    process_value_8();
     if (nc_hdr.op == NC_READ_REQUEST and nc_cache_md.cache_valid == 1) {
         apply (reply_read_hit_after);
     }

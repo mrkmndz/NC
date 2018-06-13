@@ -60,16 +60,6 @@ header_type nc_hdr_t {
 }
 header nc_hdr_t nc_hdr;
 
-header_type nc_load_t {
-    fields {
-        load_1: 32;
-        load_2: 32;
-        load_3: 32;
-        load_4: 32;
-    }
-}
-header nc_load_t nc_load;
-
 /*
     The headers for value are defined in value.p4
     k = 1, 2, ..., 8
