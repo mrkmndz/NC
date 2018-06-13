@@ -34,4 +34,4 @@ while True:
         counter = counter + 1
     elif (nc_p.type == NC_UPDATE_REQUEST):
         rp_p = P4NetCache(type=NC_UPDATE_REPLY, key=nc_p.key, value=lookup_val(nc_p.key))
-        s.sendto(str(rp_p), (CONTROLLER_IP, NC_PORT))
+        s.sendto(str(rp_p), (CLIENT_IP, NC_PORT))
