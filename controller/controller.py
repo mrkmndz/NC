@@ -65,22 +65,19 @@ def remove_table_entry(api, handle):
 lock = threading.Lock()
 
 s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+s.bind((CONTROLLER_IP, NC_PORT))
+
 api = configure_runtime_api()
 reset_hh_regs(api)
 reset_cache_allocation(api)
 cache = [None for x in range(CACHE_SIZE)]
 
-def send(pkt):
-    sendp(pad_pkt(pkt, 64), iface="eth0")
+while True:
+    packet_str, src = s.recvfrom(2048)
+    nc_p = P4NetCache(packet_str)
+    if (nc_p.type != NC_READ_REQUEST):
+        continue
 
-def recv(pkt):
-    if not pkt.haslayer(P4NetCache):
-        return
-    nc_p = pkt[P4NetCache]
-    if nc_p.type != NC_READ_REQUEST:
-        return
-
-    lock.acquire()
     try:
         open_slot = next(idx for idx, val in enumerate(cache) if val is None)
         print "found slot at %d" % open_slot
@@ -102,6 +99,3 @@ def recv(pkt):
             remove_table_entry(api, handle)
             cache[choice] = None
         reset_hh_regs(api)
-    lock.release()
-
-sniff(iface="eth0", prn=recv, count=0)

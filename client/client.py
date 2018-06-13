@@ -66,7 +66,7 @@ def sender():
         key_field = struct.pack(">I", key_header)
         for x in range(len_key - 4):
             key_field += "\0"
-        rq_p = NetCache(type=NC_READ_REQUEST, key=key_field)
+        rq_p = P4NetCache(type=NC_READ_REQUEST, key=key_field)
         o_lock.acquire()
         outstanding[key_header].append(time.time())
         o_lock.release()
@@ -80,7 +80,7 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((CLIENT_IP, NC_PORT))
 while True:
     packet_str, src = s.recvfrom(1024)
-    nc_p = NetCache(packet_str)
+    nc_p = P4NetCache(packet_str)
     key_header = struct.unpack(">I", nc_p.key[:4])[0]
     if key_header < 1 or key_header > 1000:
         print "invalid key %d" % key_header

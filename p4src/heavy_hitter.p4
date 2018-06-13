@@ -82,6 +82,7 @@ control bloom_filter {
 #define CONTROLLER_IP 0x0a000003
 action report_hot_act() {
     modify_field (ipv4.dstAddr, CONTROLLER_IP);
+    modify_field (udp.checksum, 0);
 }
 
 table report_hot {

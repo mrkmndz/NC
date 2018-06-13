@@ -26,12 +26,12 @@ s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 s.bind((SERVER_IP, NC_PORT))
 while True:
     packet_str, src = s.recvfrom(2048)
-    nc_p = NetCache(packet_str)
+    nc_p = P4NetCache(packet_str)
     
     if (nc_p.type == NC_READ_REQUEST or nc_p.type == NC_HOT_READ_REQUEST):
-        rp_p = NetCache(type=NC_READ_REPLY, key=nc_p.key, value=lookup_val(nc_p.key))
+        rp_p = P4NetCache(type=NC_READ_REPLY, key=nc_p.key, value=lookup_val(nc_p.key))
         s.sendto(str(rp_p), (CLIENT_IP, NC_PORT))
         counter = counter + 1
     elif (nc_p.type == NC_UPDATE_REQUEST):
-        rp_p = NetCache(type=NC_UPDATE_REPLY, key=nc_p.key, value=lookup_val(nc_p.key))
+        rp_p = P4NetCache(type=NC_UPDATE_REPLY, key=nc_p.key, value=lookup_val(nc_p.key))
         s.sendto(str(rp_p), (CONTROLLER_IP, NC_PORT))
