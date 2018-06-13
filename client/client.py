@@ -51,7 +51,7 @@ outstanding = {}
 for i in range(1, max_key + 1):
     outstanding[i] = deque([])
 
-use_zipf = False
+use_zipf = True 
 def sender():
     global sent_counter
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
